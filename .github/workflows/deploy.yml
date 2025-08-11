@@ -7,7 +7,7 @@ env:
   PROJECT_ID: github-actions-111
   REGION: us-central1
   TOPIC: image-topic
-  BUCKET: image-upload-bucket
+  BUCKET: image-upload-bucket-111
   THUMB_BUCKET: image-thumbnail-bucket
   FUNCTION_DIR: functions/image_processor
   FUNCTION_NAME: image-processor
