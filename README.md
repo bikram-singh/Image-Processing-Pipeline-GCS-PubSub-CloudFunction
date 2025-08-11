@@ -20,17 +20,6 @@ This project automates **asynchronous image processing** in Google Cloud using:
 
 ---
 
-## 📂 Project Structure
 
-gcp-image-pipeline/
-├── .github/
-│ └── workflows/
-│ └── deploy.yml # GitHub Actions workflow
-├── functions/
-│ └── image_processor/
-│ ├── main.py # Full image processing logic
-│ ├── requirements.txt # Dependencies for Pillow + GCS
-│ └── .gcloudignore # Ignore unneeded files
-├── README.md
 
   
