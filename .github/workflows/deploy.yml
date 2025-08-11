@@ -4,11 +4,11 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_ID: your-gcp-project
+  PROJECT_ID: github-actions-111
   REGION: us-central1
-  TOPIC: image-events
-  BUCKET: my-upload-bucket
-  THUMB_BUCKET: my-thumbnail-bucket
+  TOPIC: image-topic
+  BUCKET: image-upload-bucket
+  THUMB_BUCKET: image-thumbnail-bucket
   FUNCTION_DIR: functions/image_processor
   FUNCTION_NAME: image-processor
 
@@ -16,19 +16,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
-      contents: read
+      contents: read  # id-token removed because no WIF
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - id: 'auth'
-        name: 'Authenticate to Google Cloud'
+        name: 'Authenticate to Google Cloud using Service Account Key'
         uses: 'google-github-actions/auth@v1'
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER'
-          service_account: 'sa-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: 'Setup gcloud'
         uses: 'google-github-actions/setup-gcloud@v1'
