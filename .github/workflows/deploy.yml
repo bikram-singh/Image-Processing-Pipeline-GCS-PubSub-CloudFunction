@@ -1,0 +1,77 @@
+name: deploy-image-processor
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: your-gcp-project
+  REGION: us-central1
+  TOPIC: image-events
+  BUCKET: my-upload-bucket
+  THUMB_BUCKET: my-thumbnail-bucket
+  FUNCTION_DIR: functions/image_processor
+  FUNCTION_NAME: image-processor
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER'
+          service_account: 'sa-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: 'Setup gcloud'
+        uses: 'google-github-actions/setup-gcloud@v1'
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: 'Enable APIs'
+        run: |
+          gcloud services enable \
+            functions.googleapis.com \
+            pubsub.googleapis.com \
+            storage.googleapis.com
+
+      - name: 'Create Pub/Sub topic'
+        run: |
+          gcloud pubsub topics create ${{ env.TOPIC }} || true
+
+      - name: 'Create buckets'
+        run: |
+          gcloud storage buckets create gs://${{ env.BUCKET }} --location=${{ env.REGION }} || true
+          gcloud storage buckets create gs://${{ env.THUMB_BUCKET }} --location=${{ env.REGION }} || true
+
+      - name: 'Grant storage service agent publish permission'
+        run: |
+          PROJECT_NUMBER=$(gcloud projects describe ${{ env.PROJECT_ID }} --format='value(projectNumber)')
+          SA="service-${PROJECT_NUMBER}@gcp-sa-storage.iam.gserviceaccount.com"
+          gcloud pubsub topics add-iam-policy-binding projects/${{ env.PROJECT_ID }}/topics/${{ env.TOPIC }} \
+            --member="serviceAccount:${SA}" --role="roles/pubsub.publisher" || true
+
+      - name: 'Deploy Cloud Function (Gen2)'
+        run: |
+          gcloud functions deploy ${{ env.FUNCTION_NAME }} \
+            --gen2 \
+            --runtime=python310 \
+            --region=${{ env.REGION }} \
+            --source=${{ env.FUNCTION_DIR }} \
+            --entry-point=process_gcs_notification \
+            --trigger-topic=${{ env.TOPIC }} \
+            --set-env-vars=THUMB_BUCKET=${{ env.THUMB_BUCKET }}
+
+      - name: 'Create bucket notification'
+        run: |
+          gcloud storage buckets notifications create gs://${{ env.BUCKET }} \
+            --topic=projects/${{ env.PROJECT_ID }}/topics/${{ env.TOPIC }} \
+            --payload-format=json --event-types=OBJECT_FINALIZE
