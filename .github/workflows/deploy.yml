@@ -39,6 +39,7 @@ jobs:
           gcloud services enable \
             cloudfunctions.googleapis.com \
             pubsub.googleapis.com \
+            eventarc.googleapis.com \
             storage.googleapis.com
 
       - name: 'Create Pub/Sub topic'
