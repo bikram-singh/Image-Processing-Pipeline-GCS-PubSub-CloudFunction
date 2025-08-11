@@ -37,7 +37,7 @@ jobs:
       - name: 'Enable APIs'
         run: |
           gcloud services enable \
-            functions.googleapis.com \
+            cloudfunctions.googleapis.com \
             pubsub.googleapis.com \
             storage.googleapis.com
 
