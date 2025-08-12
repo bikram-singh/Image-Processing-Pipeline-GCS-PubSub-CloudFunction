@@ -29,7 +29,7 @@ admin_@cloudshell:~ (github-actions-111)$ gsutil ls gs://image-thumbnail-bucket/
 gs://image-thumbnail-bucket/thumbs/image.jpg
 Operation completed over 1 objects/14.9 KiB.
 
-=========== Created using GitHub MCP =======
+##                                              =========== Created using GitHub MCP =======
 
 # 📷 Image Processing Pipeline - GCS + Pub/Sub + Cloud Functions
 
